@@ -46,33 +46,30 @@ class api_class {
     }
 
     public function get_api_token() {
+
         $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $this->url . '/index.php?route=api/login',
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.baubuddy.de/index.php/login",
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
+            CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => 'username=' . $this->username . '&key=' . $this->key,
-            CURLOPT_HTTPHEADER => array(
-                'username: ' . $this->username,
-                'key: ' . $this->key,
-                'Content-Type: application/x-www-form-urlencoded',
-                'Cookie: currency=TRY; language=tr-tr'
-            ),
-        ));
-
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => "{\"username\":\"365\", \"password\":\"1\"}",
+            CURLOPT_HTTPHEADER => [
+                "Authorization: Basic QVBJX0V4cGxvcmVyOjEyMzQ1NmlzQUxhbWVQYXNz",
+                "Content-Type: application/json"
+            ],
+        ]);
+//$response = curl_exec($curl);
         $response = curl_exec($curl);
 
         curl_close($curl);
 
         $json = json_decode($response);
         //   echo "333333  ". var_dump($response) ."  333333"."<br>";     
-        return $json->api_token;
+        return $json->oauth->access_token;
     }
 
     public function card_add() {
@@ -103,53 +100,29 @@ class api_class {
 //return $this->url .'/index.php?route=api/cart/add&api_token='. $this->token;
     }
 
-    public function user_info() {
+    public function get_datas($token) {
 
         $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $this->url . '/index.php?route=api/customer&api_token=' . $this->token,
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.baubuddy.de/dev/index.php/v1/tasks/select",
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
+            CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => array('customer_id' => '0', 'firstname' => 'Test akdemi3', 'lastname' => 'Test akademi soy3', 'email' => 'test3@hrdakedemi.com', 'telephone' => '3333333333', 'customer_group_id' => '5'),
-            CURLOPT_HTTPHEADER => array(
-                'Cookie: currency=TRY; language=tr-tr'
-            ),
-        ));
-
+            CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_POSTFIELDS => "{\"username\":\"365\", \"password\":\"1\"}",
+            CURLOPT_HTTPHEADER => [
+                "Authorization: Bearer ".$token,
+                "Content-Type: application/json"
+            ],
+        ]);
         $response = curl_exec($curl);
-
+//        $err = curl_error($curl);
         curl_close($curl);
-        echo $response;
-    }
-
-    public function get_products($token, $cat_id) {
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $this->url . '/index.php?route=api/products&path=' . $cat_id . '&api_token=' . $token,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-                'Cookie: currency=TRY; language=tr-tr'
-            ),
-        ));
-
-        $response = curl_exec($curl);
-//var_dump($response);
-        curl_close($curl);
+       
         $json = json_decode($response);
+//        var_dump($json);
         return $json;
     }
 
@@ -208,50 +181,50 @@ class api_class {
 
 
 
-        <?php
-        $card->i = 1;
-        foreach ($card->products as $p) {
-            ?>
+                <?php
+                $card->i = 1;
+                foreach ($card->products as $p) {
+                    ?>
                     <tr>
                         <th scope="row"><?php echo $card->i++; ?></th>
                         <th scope="row"><?php echo $p->name; ?></th>
                         <th scope="row"><?php echo $p->price; ?></th>
-                        <th scope="row"><a style="color:red" onclick="remove_cart('<?php echo $p->product_id; ?>','<?php echo $p->cart_id; ?>','<?php echo $_SESSION["token"]; ?>' ,'afterLogin/odeme/remove_cart.php')" href="#"> <span><i class="fa fa-trash-o" aria-hidden="true"></i>
-</span></a></th>
+                        <th scope="row"><a style="color:red" onclick="remove_cart('<?php echo $p->product_id; ?>', '<?php echo $p->cart_id; ?>', '<?php echo $_SESSION["token"]; ?>', 'afterLogin/odeme/remove_cart.php')" href="#"> <span><i class="fa fa-trash-o" aria-hidden="true"></i>
+                                </span></a></th>
                     </tr>
 
-            <?php
-        }
-        ?>
+                    <?php
+                }
+                ?>
 
 
             </tbody>
         </table>
 
-                <?php
-            }
+        <?php
+    }
 
-            public function show_card_with_out_login($card, $href) {
-                ?>
+    public function show_card_with_out_login($card, $href) {
+        ?>
 
         <a href="javascript:void(0)" class="<?php "" ?>"><i class="ace-icon fa fa-cart-plus"></i>  <?php
-        echo count($card->products);
-        ?></a> 
+            echo count($card->products);
+            ?></a> 
         <ul id="" class="sub-menu my-font">
 
-        <?php
-        foreach ($card->products as $p) {
-            ?>
+            <?php
+            foreach ($card->products as $p) {
+                ?>
 
                 <li>
                     <a href="<?php echo '#'; ?>" class="clearfix">
-                <?php
-                ?>
+                        <?php
+                        ?>
 
                         <span class="msg-body">
                             <span class="msg-title">
                                 <span class="blue"><?php echo $p->name; ?>:</span>
-                        <?php echo $p->name; ?>
+                                <?php echo $p->name; ?>
                             </span>
 
                             <span class="msg-time">
@@ -260,36 +233,36 @@ class api_class {
                             </span> 
                         </span>
                     </a>
-                   
+
                 </li>
-            <?php
-        }
-        if ( count($card->products) > 0){
-        ?>
-            <li class="dropdown-footer">
-                <a target="_blank" href="<?php echo $href; ?>">
-                    Ödeme Yap
-                    <i class="ace-icon fa fa-arrow-right"></i>
-                </a>
-            </li>
-        <?php } ?>
+                <?php
+            }
+            if (count($card->products) > 0) {
+                ?>
+                <li class="dropdown-footer">
+                    <a target="_blank" href="<?php echo $href; ?>">
+                        Ödeme Yap
+                        <i class="ace-icon fa fa-arrow-right"></i>
+                    </a>
+                </li>
+            <?php } ?>
         </ul>
 
-            <?php
-        }
+        <?php
+    }
 
-        public function show_card($card, $href) {
-            ?>
+    public function show_card($card, $href) {
+        ?>
 
         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
             <i class="ace-icon fa fa-cart-plus icon-animated-vertical"></i>
             <span id="card_num" class="badge badge-warning"><?php
-        if ($card->products != null) {
-            echo count($card->products) . "";
-        } else {
-            echo '0';
-        }
-        ?></span>
+                if ($card->products != null) {
+                    echo count($card->products) . "";
+                } else {
+                    echo '0';
+                }
+                ?></span>
         </a>
 
         <ul class="dropdown-menu-right dropdown-navbar dropdown-menu dropdown-caret dropdown-close">
@@ -299,20 +272,20 @@ class api_class {
                 echo count($card->products);
                 ?> Ürün
             </li>
-                <?php
-                foreach ($card->products as $p) {
-                    ?>
+            <?php
+            foreach ($card->products as $p) {
+                ?>
                 <li class="dropdown-content">
                     <ul class="dropdown-menu dropdown-navbar">
                         <li>
                             <a href="<?php echo '#'; ?>" class="clearfix">
-                    <?php
-                    ?>
+                                <?php
+                                ?>
 
                                 <span class="msg-body">
                                     <span class="msg-title">
                                         <span class="blue"><?php echo $p->name; ?>:</span>
-                <?php echo $p->name; ?>
+                                        <?php echo $p->name; ?>
                                     </span>
 
                                     <span class="msg-time">
@@ -325,9 +298,9 @@ class api_class {
 
                     </ul>
                 </li>
-                                        <?php
-                                    }
-                                    ?>
+                <?php
+            }
+            ?>
             <li class="dropdown-footer">
                 <a target="_blank" href="<?php echo $href; ?>">
                     Ödeme Yap
